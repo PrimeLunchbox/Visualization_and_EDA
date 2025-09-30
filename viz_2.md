@@ -648,3 +648,63 @@ weather_df %>%
     ## (`stat_density()`).
 
 ![](viz_2_files/figure-gfm/unnamed-chunk-14-1.png)<!-- -->
+
+## revisit the pups
+
+data from the FAS study
+
+``` r
+pup_data = 
+  read_csv("./data/FAS_pups.csv") %>% 
+  janitor::clean_names() %>% 
+  mutate(sex = recode(sex, `1` = "male", `2` = "female"))
+```
+
+    ## Rows: 313 Columns: 6
+    ## ── Column specification ────────────────────────────────────────────────────────
+    ## Delimiter: ","
+    ## chr (2): Litter Number, PD ears
+    ## dbl (4): Sex, PD eyes, PD pivot, PD walk
+    ## 
+    ## ℹ Use `spec()` to retrieve the full column specification for this data.
+    ## ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
+
+``` r
+litters_data = 
+  read_csv("./data/FAS_litters.csv") %>% 
+  janitor::clean_names() %>% 
+  separate(group, into = c("does", "day_of_tx"), sep = 3)
+```
+
+    ## Rows: 49 Columns: 8
+    ## ── Column specification ────────────────────────────────────────────────────────
+    ## Delimiter: ","
+    ## chr (4): Group, Litter Number, GD0 weight, GD18 weight
+    ## dbl (4): GD of Birth, Pups born alive, Pups dead @ birth, Pups survive
+    ## 
+    ## ℹ Use `spec()` to retrieve the full column specification for this data.
+    ## ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
+
+``` r
+fas_data = 
+  left_join(pup_data, litters_data, by = "litter_number")
+
+fas_data$pd_ears[fas_data$pd_ears %in% c(".")] <- NA
+fas_data$pd_ears = as.numeric(fas_data$pd_ears)
+
+fas_data %>% 
+  select(does, day_of_tx, starts_with("pd")) %>%
+  pivot_longer(
+    pd_ears:pd_walk,
+    names_to = "outcome", 
+    values_to = "pn_day"
+  ) %>%
+  drop_na() %>%
+  # I DONT UNDERSTAND forcats::fct_relevel(), CHECK IT OUT LATER
+  mutate(outcome = forcats::fct_relevel(outcome, "pd_ears", "pd_pivot", "pd_walk", "pd_eyes")) %>%
+  ggplot(aes(x = does, y = pn_day)) + 
+  geom_violin() +
+  facet_grid(day_of_tx ~ outcome)
+```
+
+![](viz_2_files/figure-gfm/unnamed-chunk-15-1.png)<!-- -->
