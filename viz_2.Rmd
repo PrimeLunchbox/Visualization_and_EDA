@@ -251,3 +251,36 @@ tmax_date_plot =
 
 (tmax_tmin_plot + percp_dens_plot) / tmax_date_plot 
 ```
+
+
+## data manipulation
+
+
+control factors (order)
+```{r}
+weather_df %>% 
+  # to overwrite the legend order
+  mutate(
+    name = factor(name),
+    name = forcats::fct_relevel(name, c("Waterhole_WA"))) %>%
+  ggplot(aes(x = name, y = tmax, fill = name)) + 
+  geom_violin(alpha = .5)
+
+```
+
+
+densities for tmin and tmax simultaneously
+
+```{r}
+weather_df %>%
+  pivot_longer(
+    tmax:tmin,
+    names_to = "observation", 
+    values_to = "temperatures") %>% 
+  ggplot(aes(x = temperatures, fill = observation)) + 
+  geom_density(alpha = .5) + 
+  facet_grid(. ~ name)
+
+```
+
+
