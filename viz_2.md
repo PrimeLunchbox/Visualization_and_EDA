@@ -542,13 +542,72 @@ central_park =
   weather_df %>% 
   filter(name == "CentralPark_NY")
 
-waikiki = 
+waterhole = 
   weather_df %>% 
-  filter(name == "Waikiki_HA")
+  filter(name == "Waterhole_WA")
 
-ggplot(data = waikiki, aes(x = date, y = tmax, color = name)) +
+ggplot(data = waterhole, aes(x = date, y = tmax, color = name)) +
   geom_point() +
   geom_line(data = central_park)
 ```
 
+    ## Warning: Removed 16 rows containing missing values or values outside the scale range
+    ## (`geom_point()`).
+
 ![](viz_2_files/figure-gfm/unnamed-chunk-10-1.png)<!-- -->
+
+## ‘patchwork’
+
+faceting
+
+``` r
+weather_df %>% 
+  ggplot(aes(x = tmin, fill = name)) + 
+  geom_density(alpha = .5) + 
+  facet_grid(. ~ name)
+```
+
+    ## Warning: Removed 17 rows containing non-finite outside the scale range
+    ## (`stat_density()`).
+
+![](viz_2_files/figure-gfm/unnamed-chunk-11-1.png)<!-- -->
+
+when you want multipanel plots but cannot facet?
+
+``` r
+tmax_tmin_plot = 
+weather_df %>%
+  ggplot(aes(x = tmin, y = tmax, color = name)) + 
+  geom_point(alpha = .5) +
+  theme(legend.position = "none")
+
+percp_dens_plot = 
+  weather_df %>%
+  filter(prcp > 0) %>%
+  ggplot(aes(x = prcp, fill = name)) +
+  geom_density(alpha = .5)
+
+tmax_date_plot = 
+  weather_df %>%
+  ggplot(aes(x = date, y = tmax, color = name)) + 
+  geom_point() + 
+  geom_smooth(se = FALSE) + 
+  theme(legend.position = "none")
+
+
+#to put the figures side by side / top & bottom,
+
+(tmax_tmin_plot + percp_dens_plot) / tmax_date_plot 
+```
+
+    ## Warning: Removed 17 rows containing missing values or values outside the scale range
+    ## (`geom_point()`).
+
+    ## `geom_smooth()` using method = 'loess' and formula = 'y ~ x'
+
+    ## Warning: Removed 17 rows containing non-finite outside the scale range
+    ## (`stat_smooth()`).
+    ## Removed 17 rows containing missing values or values outside the scale range
+    ## (`geom_point()`).
+
+![](viz_2_files/figure-gfm/unnamed-chunk-12-1.png)<!-- -->
