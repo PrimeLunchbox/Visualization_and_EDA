@@ -135,3 +135,61 @@ weather_df %>%
 
 ## Univeriate plots
 
+```{r}
+weather_df %>% 
+  ggplot(aes(x = tmin)) + 
+  geom_histogram()
+
+```
+
+
+## add some color
+
+"color =" give teh frame color
+"fill =" fill the object with color
+
+```{r}
+weather_df %>% 
+  ggplot(aes(x = tmin, fill = name)) + 
+  # arrange the bars to be listed respectively
+  geom_histogram(position = "dodge") + 
+  facet_grid(. ~ name)
+```
+
+
+new geometry
+
+```{r}
+weather_df %>% 
+  ggplot(aes(x = tmin, fill = name)) + 
+  geom_density(alpha = .3, adjust = .5)
+```
+
+
+boxplots
+
+```{r}
+weather_df %>%
+  ggplot(aes(x = name, y = tmin)) + 
+  geom_boxplot()
+```
+
+
+trendy plots
+
+```{r}
+weather_df %>% 
+  ggplot(aes(x = name, y = tmin, fill = name)) + 
+  geom_violin(alpha = .5) +
+  stat_summary()
+```
+
+ridge plots
+
+```{r}
+weather_df %>% 
+  ggplot(aes(x = tmin, y = name)) + 
+  geom_density_ridges()
+```
+
+
