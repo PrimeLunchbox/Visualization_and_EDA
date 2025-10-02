@@ -93,7 +93,59 @@ weather_df %>%
     cold = case_when(
       tmax < 5 ~ "cold", 
       tmax >= 5 ~ "not cold", 
+      # pick out na values
       TRUE ~ ""
     )) %>% 
       janitor::tabyl(name, cold)
+```
+
+## general summaries
+
+do some summaries
+
+```{r}
+weather_df %>% 
+  group_by(month) %>% 
+  summarize(
+    # 'na.rm()' removes na values
+    mean_tmax = mean(tmax, na.rm = TRUE), 
+    mean_prcp = mean(prcp, na.rm = TRUE), 
+    median_min = median(tmin, na.rm = TRUE)
+  )
+```
+
+
+```{r}
+weather_df %>% 
+  group_by(name, month) %>% 
+  summarize(
+    # 'na.rm()' removes na values
+    mean_tmax = mean(tmax, na.rm = TRUE), 
+    mean_prcp = mean(prcp, na.rm = TRUE), 
+    median_min = median(tmin, na.rm = TRUE)
+  ) %>% 
+  ggplot(aes(x = month, y = mean_tmax, color = name)) +
+  geom_point() +
+  geom_line()
+```
+
+summarzie many columns
+
+```{r}
+weather_df %>% 
+  group_by(name, month) %>%
+  summarize(across(prcp:tmin, mean))
+```
+
+sometimes results can be easier to read in another format
+
+```{r}
+weather_df %>% 
+  group_by(name, month) %>% 
+  summarize(mean_tmax = mean(tmax)) %>%
+  pivot_wider(
+    names_from = name, 
+    values_from = mean_tmax
+  ) %>% 
+  knitr::kable(digits = 1)
 ```

@@ -180,6 +180,7 @@ weather_df %>%
     cold = case_when(
       tmax < 5 ~ "cold", 
       tmax >= 5 ~ "not cold", 
+      # pick out na values
       TRUE ~ ""
     )) %>% 
       janitor::tabyl(name, cold)
@@ -189,3 +190,122 @@ weather_df %>%
     ##  CentralPark_NY   96      634            0
     ##      Molokai_HI    0      729            1
     ##    Waterhole_WA  319      395           16
+
+## general summaries
+
+do some summaries
+
+``` r
+weather_df %>% 
+  group_by(month) %>% 
+  summarize(
+    # 'na.rm()' removes na values
+    mean_tmax = mean(tmax, na.rm = TRUE), 
+    mean_prcp = mean(prcp, na.rm = TRUE), 
+    median_min = median(tmin, na.rm = TRUE)
+  )
+```
+
+    ## # A tibble: 24 × 4
+    ##    month      mean_tmax mean_prcp median_min
+    ##    <date>         <dbl>     <dbl>      <dbl>
+    ##  1 2021-01-01     10.9       39.5       0.6 
+    ##  2 2021-02-01      9.82      42.6      -1.65
+    ##  3 2021-03-01     13.7       55.5       5   
+    ##  4 2021-04-01     16.8       14.7       8.05
+    ##  5 2021-05-01     19.6       17.3      11.1 
+    ##  6 2021-06-01     24.3       14.1      17.8 
+    ##  7 2021-07-01     25.2       30.7      21.1 
+    ##  8 2021-08-01     25.2       30.6      21.1 
+    ##  9 2021-09-01     22.4       35.4      17.5 
+    ## 10 2021-10-01     18.2       36.0      13.9 
+    ## # ℹ 14 more rows
+
+``` r
+weather_df %>% 
+  group_by(name, month) %>% 
+  summarize(
+    # 'na.rm()' removes na values
+    mean_tmax = mean(tmax, na.rm = TRUE), 
+    mean_prcp = mean(prcp, na.rm = TRUE), 
+    median_min = median(tmin, na.rm = TRUE)
+  ) %>% 
+  ggplot(aes(x = month, y = mean_tmax, color = name)) +
+  geom_point() +
+  geom_line()
+```
+
+    ## `summarise()` has grouped output by 'name'. You can override using the
+    ## `.groups` argument.
+
+![](viz_2_files/figure-gfm/unnamed-chunk-9-1.png)<!-- -->
+
+summarzie many columns
+
+``` r
+weather_df %>% 
+  group_by(name, month) %>%
+  summarize(across(prcp:tmin, mean))
+```
+
+    ## `summarise()` has grouped output by 'name'. You can override using the
+    ## `.groups` argument.
+
+    ## # A tibble: 72 × 5
+    ## # Groups:   name [3]
+    ##    name           month       prcp  tmax  tmin
+    ##    <chr>          <date>     <dbl> <dbl> <dbl>
+    ##  1 CentralPark_NY 2021-01-01  18.9  4.27 -1.15
+    ##  2 CentralPark_NY 2021-02-01  46.6  3.87 -1.39
+    ##  3 CentralPark_NY 2021-03-01  28.0 12.3   3.1 
+    ##  4 CentralPark_NY 2021-04-01  22.8 17.6   7.48
+    ##  5 CentralPark_NY 2021-05-01  35.7 22.1  12.2 
+    ##  6 CentralPark_NY 2021-06-01  22.2 28.1  18.9 
+    ##  7 CentralPark_NY 2021-07-01  90.9 28.4  20.6 
+    ##  8 CentralPark_NY 2021-08-01  84.5 28.8  21.8 
+    ##  9 CentralPark_NY 2021-09-01  84.9 24.8  17.8 
+    ## 10 CentralPark_NY 2021-10-01  43.1 19.9  13.4 
+    ## # ℹ 62 more rows
+
+sometimes results can be easier to read in another format
+
+``` r
+weather_df %>% 
+  group_by(name, month) %>% 
+  summarize(mean_tmax = mean(tmax)) %>%
+  pivot_wider(
+    names_from = name, 
+    values_from = mean_tmax
+  ) %>% 
+  knitr::kable(digits = 1)
+```
+
+    ## `summarise()` has grouped output by 'name'. You can override using the
+    ## `.groups` argument.
+
+| month      | CentralPark_NY | Molokai_HI | Waterhole_WA |
+|:-----------|---------------:|-----------:|-------------:|
+| 2021-01-01 |            4.3 |       27.6 |          0.8 |
+| 2021-02-01 |            3.9 |       26.4 |         -0.8 |
+| 2021-03-01 |           12.3 |       25.9 |           NA |
+| 2021-04-01 |           17.6 |       26.6 |          6.1 |
+| 2021-05-01 |           22.1 |       28.6 |          8.2 |
+| 2021-06-01 |           28.1 |       29.6 |         15.3 |
+| 2021-07-01 |           28.4 |       30.0 |         17.3 |
+| 2021-08-01 |           28.8 |       29.5 |         17.2 |
+| 2021-09-01 |           24.8 |       29.7 |         12.6 |
+| 2021-10-01 |           19.9 |       29.1 |          5.5 |
+| 2021-11-01 |           11.5 |       28.8 |          3.5 |
+| 2021-12-01 |            9.6 |       26.2 |           NA |
+| 2022-01-01 |            2.9 |       26.6 |          3.6 |
+| 2022-02-01 |            7.7 |       26.8 |           NA |
+| 2022-03-01 |           12.0 |       27.7 |          3.4 |
+| 2022-04-01 |           15.8 |       27.7 |          2.5 |
+| 2022-05-01 |           22.3 |         NA |          5.8 |
+| 2022-06-01 |           26.1 |       29.2 |         11.1 |
+| 2022-07-01 |           30.7 |       29.5 |         15.9 |
+| 2022-08-01 |           30.5 |       30.7 |           NA |
+| 2022-09-01 |           24.9 |       30.4 |         15.2 |
+| 2022-10-01 |           17.4 |       29.2 |         11.9 |
+| 2022-11-01 |           14.0 |       28.0 |          2.1 |
+| 2022-12-01 |            6.8 |       27.3 |           NA |
