@@ -1,0 +1,321 @@
+---
+title: "Visualization Part 2"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+library(patchwork)
+
+```
+
+Import the weather data
+
+```{r}
+weather_df = 
+  rnoaa::meteo_pull_monitors(
+    c("USW00094728", "USW00022534", "USS0023B17S"), # assess data online allowed by rnoaa package
+    var = c("PRCP", "TMIN", "TMAX"), 
+    date_min = "2021-01-01",
+    date_max = "2022-12-31") %>%
+  mutate(
+    name = case_match(
+      id, 
+      "USW00094728" ~ "CentralPark_NY", 
+      "USW00022534" ~ "Molokai_HI",
+      "USS0023B17S" ~ "Waterhole_WA"),
+    tmin = tmin / 10,
+    tmax = tmax / 10) %>%
+  select(name, id, everything())
+```
+
+## remember this plot
+
+```{r}
+weather_df %>% 
+  ggplot(aes(x = tmin, y = tmax, color = name)) +
+  geom_point(alpha = .5)
+```
+
+
+Adding labels
+```{r}
+weather_df %>% 
+  ggplot(aes(x = tmin, y = tmax, color = name)) +
+  geom_point(alpha = .5) +
+  labs(
+    titlle = "Temperature Plot",
+    x = "Minimum daily temperature (C)", 
+    y = "<aximum daily temperature (C)",
+    caption = "Data from rnoaa package; temperature in 2017"
+  )
+```
+
+
+## scales
+
+```{r}
+weather_df %>% 
+  ggplot(aes(x = tmin, y = tmax, color = name)) +
+  geom_point(alpha = .5) +
+  labs(
+    titlle = "Temperature Plot",
+    x = "Minimum daily temperature (C)", 
+    y = "<aximum daily temperature (C)",
+    caption = "Data from rnoaa package; temperature in 2017"
+  ) + 
+  scale_x_continuous(
+    # scale of breaks
+    breaks = c(-15, 0, 15), 
+    #label names shown for scale
+    labels = c("-15C", "0", "15")
+  ) + 
+  scale_y_continuous(
+    # sqrt transformation and other transformations e.i. log transformation can be applied
+    trans = "sqrt", 
+    # change the scale position in the figure
+    position = "right"
+  )
+```
+
+
+
+```{r}
+weather_df %>% 
+  ggplot(aes(x = tmin, y = tmax, color = name)) +
+  geom_point(alpha = .5) +
+  labs(
+    titlle = "Temperature Plot",
+    x = "Minimum daily temperature (C)", 
+    y = "<aximum daily temperature (C)",
+    caption = "Data from rnoaa package; temperature in 2017"
+  ) + 
+  scale_x_continuous(
+    breaks = c(-15, 0, 15), 
+    labels = c("-15C", "0", "15")
+  ) + 
+  scale_y_continuous(
+    position = "right"
+  ) + 
+  scale_color_hue(
+    name = "Location",
+    h = c(100, 2000))
+```
+
+
+```{r}
+weather_df %>% 
+  ggplot(aes(x = tmin, y = tmax, color = name)) +
+  geom_point(alpha = .5) +
+  labs(
+    titlle = "Temperature Plot",
+    x = "Minimum daily temperature (C)", 
+    y = "<aximum daily temperature (C)",
+    caption = "Data from rnoaa package; temperature in 2017"
+  ) + 
+  # this is better for coloring
+  viridis::scale_color_viridis(
+    name = "Location", 
+    discrete = TRUE
+  )
+```
+
+
+## themes
+
+### change position of group name
+
+```{r}
+weather_df %>% 
+  ggplot(aes(x = tmin, y = tmax, color = name)) +
+  geom_point(alpha = .5) +
+  labs(
+    titlle = "Temperature Plot",
+    x = "Minimum daily temperature (C)", 
+    y = "<aximum daily temperature (C)",
+    caption = "Data from rnoaa package; temperature in 2017"
+  ) + 
+  # this is better for coloring
+  viridis::scale_color_viridis(
+    name = "Location", 
+    discrete = TRUE) + 
+  #change position of group name
+  theme(legend.position = "bottom")
+```
+
+### change overall theme
+
+```{r}
+weather_df %>% 
+  ggplot(aes(x = tmin, y = tmax, color = name)) +
+  geom_point(alpha = .5) +
+  labs(
+    titlle = "Temperature Plot",
+    x = "Minimum daily temperature (C)", 
+    y = "<aximum daily temperature (C)",
+    caption = "Data from rnoaa package; temperature in 2017"
+  ) + 
+  # this is better for coloring
+  viridis::scale_color_viridis(
+    name = "Location", 
+    discrete = TRUE) + 
+  theme(legend.position = "bottom")
+  #get rid of frame line
+  theme_minimal()
+
+# here since the "theme_minimal()" comes after theme(legend.position), the previous theme() is covered by the last theme_minimal().
+```
+
+
+
+## setting options
+
+```{r, eval = FALSE}
+library(tidyverse)
+
+
+knitr::opts_chunk$set(
+  fig.width = 6, 
+  fig.asp = .6, 
+  out. width = "90%"
+)
+
+theme_set(them_minimal() + theme(legend.position = "bottom"))
+
+options(
+  ggplot2.continuous.colour = "viridis", 
+  ggplot2.continuous.fill = "viridis"
+)
+
+scale_colour_discrete = scale_color_viridis_d
+scale_fill_discrete = scale_fill_viridis_d
+
+```
+
+
+## data args in "geom"
+
+```{r}
+central_park = 
+  weather_df %>% 
+  filter(name == "CentralPark_NY")
+
+waterhole = 
+  weather_df %>% 
+  filter(name == "Waterhole_WA")
+
+ggplot(data = waterhole, aes(x = date, y = tmax, color = name)) +
+  geom_point() +
+  geom_line(data = central_park)
+```
+
+
+## 'patchwork'
+
+faceting
+
+```{r}
+weather_df %>% 
+  ggplot(aes(x = tmin, fill = name)) + 
+  geom_density(alpha = .5) + 
+  facet_grid(. ~ name)
+
+```
+
+
+
+when you want multipanel plots but cannot facet?
+
+```{r}
+tmax_tmin_plot = 
+weather_df %>%
+  ggplot(aes(x = tmin, y = tmax, color = name)) + 
+  geom_point(alpha = .5) +
+  theme(legend.position = "none")
+
+percp_dens_plot = 
+  weather_df %>%
+  filter(prcp > 0) %>%
+  ggplot(aes(x = prcp, fill = name)) +
+  geom_density(alpha = .5)
+
+tmax_date_plot = 
+  weather_df %>%
+  ggplot(aes(x = date, y = tmax, color = name)) + 
+  geom_point() + 
+  geom_smooth(se = FALSE) + 
+  theme(legend.position = "none")
+
+
+#to put the figures side by side / top & bottom,
+
+(tmax_tmin_plot + percp_dens_plot) / tmax_date_plot 
+```
+
+
+## data manipulation
+
+
+control factors (order)
+```{r}
+weather_df %>% 
+  # to overwrite the legend order
+  mutate(
+    name = factor(name),
+    name = forcats::fct_relevel(name, c("Waterhole_WA"))) %>%
+  ggplot(aes(x = name, y = tmax, fill = name)) + 
+  geom_violin(alpha = .5)
+
+```
+
+
+densities for tmin and tmax simultaneously
+
+```{r}
+weather_df %>%
+  pivot_longer(
+    tmax:tmin,
+    names_to = "observation", 
+    values_to = "temperatures") %>% 
+  ggplot(aes(x = temperatures, fill = observation)) + 
+  geom_density(alpha = .5) + 
+  facet_grid(. ~ name)
+
+```
+
+
+## revisit the pups
+
+data from the FAS study
+
+```{r}
+pup_data = 
+  read_csv("./data/FAS_pups.csv") %>% 
+  janitor::clean_names() %>% 
+  mutate(sex = recode(sex, `1` = "male", `2` = "female"))
+
+litters_data = 
+  read_csv("./data/FAS_litters.csv") %>% 
+  janitor::clean_names() %>% 
+  separate(group, into = c("does", "day_of_tx"), sep = 3)
+
+fas_data = 
+  left_join(pup_data, litters_data, by = "litter_number")
+
+fas_data$pd_ears[fas_data$pd_ears %in% c(".")] <- NA
+fas_data$pd_ears = as.numeric(fas_data$pd_ears)
+
+fas_data %>% 
+  select(does, day_of_tx, starts_with("pd")) %>%
+  pivot_longer(
+    pd_ears:pd_walk,
+    names_to = "outcome", 
+    values_to = "pn_day"
+  ) %>%
+  drop_na() %>%
+  # I DONT UNDERSTAND forcats::fct_relevel(), CHECK IT OUT LATER
+  mutate(outcome = forcats::fct_relevel(outcome, "pd_ears", "pd_pivot", "pd_walk", "pd_eyes")) %>%
+  ggplot(aes(x = does, y = pn_day)) + 
+  geom_violin() +
+  facet_grid(day_of_tx ~ outcome)
+```
