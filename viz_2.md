@@ -309,3 +309,79 @@ weather_df %>%
 | 2022-10-01 |           17.4 |       29.2 |         11.9 |
 | 2022-11-01 |           14.0 |       28.0 |          2.1 |
 | 2022-12-01 |            6.8 |       27.3 |           NA |
+
+## ‘group_by()’ and ‘mutate()’
+
+``` r
+weather_df %>%
+  group_by(name) %>% 
+  mutate(
+    mean_tmax = mean(tmax, na.rm = TRUE), 
+    centered_tmax = tmax - mean_tmax
+  ) %>%
+  ggplot(aes(x = date, y = centered_tmax, color = name)) +
+  geom_point()
+```
+
+    ## Warning: Removed 17 rows containing missing values or values outside the scale range
+    ## (`geom_point()`).
+
+![](viz_2_files/figure-gfm/unnamed-chunk-12-1.png)<!-- -->
+
+what about window functions
+
+``` r
+weather_df %>% 
+  group_by(name, month) %>% 
+  # 'min_rank()' ranks from the smallest value. 'min_rank(desc())' ranks from the largest value.
+  mutate(temp_rank = min_rank(tmax)) %>% 
+  filter(temp_rank == 1)
+```
+
+    ## # A tibble: 92 × 8
+    ## # Groups:   name, month [72]
+    ##    name           id          date        prcp  tmax  tmin month      temp_rank
+    ##    <chr>          <chr>       <date>     <dbl> <dbl> <dbl> <date>         <int>
+    ##  1 CentralPark_NY USW00094728 2021-01-29     0  -3.8  -9.9 2021-01-01         1
+    ##  2 CentralPark_NY USW00094728 2021-02-08     0  -1.6  -8.2 2021-02-01         1
+    ##  3 CentralPark_NY USW00094728 2021-03-02     0   0.6  -6   2021-03-01         1
+    ##  4 CentralPark_NY USW00094728 2021-04-02     0   3.9  -2.1 2021-04-01         1
+    ##  5 CentralPark_NY USW00094728 2021-05-29   117  10.6   8.3 2021-05-01         1
+    ##  6 CentralPark_NY USW00094728 2021-05-30   226  10.6   8.3 2021-05-01         1
+    ##  7 CentralPark_NY USW00094728 2021-06-11     0  20.6  16.7 2021-06-01         1
+    ##  8 CentralPark_NY USW00094728 2021-06-12     0  20.6  16.7 2021-06-01         1
+    ##  9 CentralPark_NY USW00094728 2021-07-03    86  18.9  15   2021-07-01         1
+    ## 10 CentralPark_NY USW00094728 2021-08-04     0  24.4  19.4 2021-08-01         1
+    ## # ℹ 82 more rows
+
+lag
+
+``` r
+weather_df %>% 
+  group_by(name, month) %>% 
+  # 'lag()' observes each last row of the current row
+  mutate(lag_temp = lag(tmax), temp_change = tmax - lag_temp) %>% 
+  summarize(
+    temp_change_max = max(temp_change, na.rm = TRUE),
+    tmep_change_sd = sd(temp_change, na.rm = TRUE)
+  )
+```
+
+    ## `summarise()` has grouped output by 'name'. You can override using the
+    ## `.groups` argument.
+
+    ## # A tibble: 72 × 4
+    ## # Groups:   name [3]
+    ##    name           month      temp_change_max tmep_change_sd
+    ##    <chr>          <date>               <dbl>          <dbl>
+    ##  1 CentralPark_NY 2021-01-01             6.2           2.92
+    ##  2 CentralPark_NY 2021-02-01             8.4           3.55
+    ##  3 CentralPark_NY 2021-03-01            11.7           5.92
+    ##  4 CentralPark_NY 2021-04-01            11.6           5.98
+    ##  5 CentralPark_NY 2021-05-01            10.5           5.43
+    ##  6 CentralPark_NY 2021-06-01             6.1           2.82
+    ##  7 CentralPark_NY 2021-07-01             8.4           3.74
+    ##  8 CentralPark_NY 2021-08-01             5             2.82
+    ##  9 CentralPark_NY 2021-09-01             5             2.69
+    ## 10 CentralPark_NY 2021-10-01             7.8           3.64
+    ## # ℹ 62 more rows
